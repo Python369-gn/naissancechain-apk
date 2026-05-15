@@ -6,25 +6,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/mockup-shell';
 import { NaissanceTheme } from '@/constants/theme';
 import { useBirthRegistry } from '@/context/birth-registry';
-import { BirthFormData } from '@/types/birth';
-
-const fallback: BirthFormData = {
-  childFirstName: 'Mamadou Alimou',
-  childLastName: 'Diallo',
-  sex: 'Masculin',
-  birthDate: '14 Mai 2024',
-  birthTime: '12:00',
-  birthPlace: 'Hôpital National Ignace Deen, Conakry',
-  fatherName: 'Non renseigné',
-  motherName: 'Aissatou Lamarana Sow',
-  address: 'Conakry',
-  healthCenter: 'Hôpital National Ignace Deen',
-  agentName: 'Agent Mobile',
-};
 
 export default function VerificationScreen() {
   const { addRecord, draft } = useBirthRegistry();
-  const data = draft ?? fallback;
+
+  if (!draft) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <AppHeader title="Erreur" />
+        <View style={styles.content}>
+          <Text style={styles.title}>Aucune donnée trouvée</Text>
+          <Text style={styles.subtitle}>Veuillez recommencer l&apos;enregistrement.</Text>
+          <Pressable onPress={() => router.replace('/register')} style={[styles.saveButton, { marginTop: 20 }]}>
+            <Text style={styles.saveText}>RETOURNER AU FORMULAIRE</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const data = draft;
 
   const save = async () => {
     await addRecord(data);
@@ -44,9 +45,13 @@ export default function VerificationScreen() {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <MaterialIcons color={NaissanceTheme.green} name="child-care" size={20} />
-            <Text style={styles.sectionTitle}>IDENTITÉ DE L'ENFANT</Text>
+            <Text style={styles.sectionTitle}>IDENTITÉ DE L&apos;ENFANT</Text>
           </View>
           
+          <View style={styles.dataRow}>
+            <Text style={styles.label}>NIU (Identifiant)</Text>
+            <Text style={styles.value}>{data.childId || "Non renseigné"}</Text>
+          </View>
           <View style={styles.dataRow}>
             <Text style={styles.label}>Prénom(s)</Text>
             <Text style={styles.value}>{data.childFirstName}</Text>
@@ -65,9 +70,15 @@ export default function VerificationScreen() {
               <Text style={styles.value}>{data.birthDate}</Text>
             </View>
           </View>
-          <View style={styles.dataRow}>
-            <Text style={styles.label}>Lieu de Naissance</Text>
-            <Text style={styles.value}>{data.birthPlace}</Text>
+          <View style={styles.twoCols}>
+            <View style={styles.col}>
+              <Text style={styles.label}>Ville / Commune</Text>
+              <Text style={styles.value}>{data.birthPlace}</Text>
+            </View>
+            <View style={styles.col}>
+              <Text style={styles.label}>Hôpital / Lieu</Text>
+              <Text style={styles.value}>{(data as any).hospital || data.healthCenter || "Non renseigné"}</Text>
+            </View>
           </View>
         </View>
 
@@ -75,32 +86,28 @@ export default function VerificationScreen() {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <MaterialIcons color={NaissanceTheme.green} name="family-restroom" size={20} />
-            <Text style={styles.sectionTitle}>FILIATION ET ADRESSE</Text>
+            <Text style={styles.sectionTitle}>FILIATION ET PARENTS</Text>
           </View>
 
           <View style={styles.dataRow}>
-            <Text style={styles.label}>Nom de la Mère</Text>
+            <Text style={styles.label}>Mère</Text>
             <Text style={styles.value}>{data.motherName}</Text>
           </View>
           <View style={styles.dataRow}>
-            <Text style={styles.label}>Nom du Père</Text>
-            <Text style={styles.value}>{data.fatherName || 'Non renseigné'}</Text>
-          </View>
-          <View style={styles.dataRow}>
-            <Text style={styles.label}>Adresse de résidence</Text>
-            <Text style={styles.value}>{data.address || 'Non renseignée'}</Text>
+            <Text style={styles.label}>Père</Text>
+            <Text style={styles.value}>{data.fatherName || "Non renseigné"}</Text>
           </View>
         </View>
 
         <View style={styles.warningBox}>
           <MaterialIcons color={NaissanceTheme.danger} name="report-problem" size={20} />
-          <Text style={styles.warningText}>Toute erreur après enregistrement devra faire l'objet d'un jugement supplétif.</Text>
+          <Text style={styles.warningText}>Toute erreur après enregistrement devra faire l&apos;objet d&apos;un jugement supplétif.</Text>
         </View>
 
         <View style={styles.actions}>
           <Pressable onPress={save} style={styles.saveButton}>
             <MaterialIcons color="#111111" name="check-circle" size={22} />
-            <Text style={styles.saveText}>CONFIRMER L'ENREGISTREMENT</Text>
+            <Text style={styles.saveText}>CONFIRMER L&apos;ENREGISTREMENT</Text>
           </Pressable>
           <Pressable onPress={() => router.back()} style={styles.editButton}>
             <MaterialIcons color={NaissanceTheme.muted} name="edit" size={18} />

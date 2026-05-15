@@ -7,15 +7,15 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Platfo
 import { AppHeader, OfflineStrip, Page } from '@/components/mockup-shell';
 import { NaissanceTheme } from '@/constants/theme';
 import { useBirthRegistry } from '@/context/birth-registry';
-import { BirthFormData } from '@/types/birth';
 
-const initialForm: BirthFormData = {
+const initialForm = {
   childFirstName: '',
   childLastName: '',
-  sex: 'Masculin',
+  sex: 'Masculin' as const,
   birthDate: new Date().toLocaleDateString('fr-FR'),
   birthTime: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-  birthPlace: '',
+  birthPlace: '', // This will map to Ville/Commune
+  hospital: '',   // This will map to Hospital
   fatherName: '',
   motherName: '',
   address: '',
@@ -23,14 +23,16 @@ const initialForm: BirthFormData = {
   agentName: 'Agent Mobile',
 };
 
+type FormType = typeof initialForm;
+
 export default function RegisterScreen() {
   const { setDraft } = useBirthRegistry();
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState<FormType>(initialForm);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [date, setDate] = useState(new Date());
 
-  const update = (key: keyof BirthFormData, value: string) => {
+  const update = (key: keyof FormType, value: string) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
@@ -51,12 +53,17 @@ export default function RegisterScreen() {
 
   const continueToVerification = () => {
     if (!form.childFirstName || !form.childLastName || !form.birthPlace || !form.motherName) {
-      Alert.alert('Informations manquantes', 'Complète au minimum le prénom, le nom, le lieu et la mère.');
+      Alert.alert('Informations manquantes', 'Complète au minimum le prénom, le nom, la ville et la mère.');
       return;
     }
+    
+    // Auto-generate NIU
+    const childId = `${Math.floor(100000 + Math.random() * 899999)}-GU-${new Date().getFullYear()}`;
+
     setDraft({
       ...form,
-      healthCenter: form.healthCenter || form.birthPlace,
+      childId,
+      healthCenter: form.hospital || form.birthPlace,
     });
     router.push('/verification');
   };
@@ -67,7 +74,7 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.headerSection}>
           <Text style={styles.title}>Nouvelle Naissance</Text>
-          <Text style={styles.subtitle}>Enregistrement sécurisé pour le registre national civil.</Text>
+          <Text style={styles.subtitle}>Version Simplifiée (NIU Automatique).</Text>
           <OfflineStrip compact />
         </View>
 
@@ -75,7 +82,7 @@ export default function RegisterScreen() {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <MaterialIcons color={NaissanceTheme.green} name="child-care" size={20} />
-            <Text style={styles.sectionTitle}>IDENTITÉ DE L'ENFANT</Text>
+            <Text style={styles.sectionTitle}>IDENTITÉ DE L&apos;ENFANT</Text>
           </View>
 
           <Field 
@@ -112,7 +119,7 @@ export default function RegisterScreen() {
           </View>
         </View>
 
-        {/* Section Naissance avec Date & Heure Pickers */}
+        {/* Section Naissance */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <MaterialIcons color={NaissanceTheme.green} name="access-time" size={20} />
@@ -158,43 +165,38 @@ export default function RegisterScreen() {
             />
           )}
 
-          <Field 
-            label="Lieu de naissance" 
-            placeholder="Hôpital, Ville..." 
-            value={form.birthPlace} 
-            onChangeText={(v) => update('birthPlace', v)} 
-            icon="place" 
-          />
-          <Field 
-            label="Adresse de résidence" 
-            placeholder="Quartier, Secteur..." 
-            value={form.address} 
-            onChangeText={(v) => update('address', v)} 
-            icon="home" 
-          />
+          <View style={styles.twoCols}>
+            <View style={{ flex: 1 }}>
+              <Field 
+                label="Ville / Commune" 
+                placeholder="Ex: Kaloum" 
+                value={form.birthPlace} 
+                onChangeText={(v) => update('birthPlace', v)} 
+                icon="place" 
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Field 
+                label="Hôpital / Lieu" 
+                placeholder="Ex: Donka" 
+                value={form.hospital} 
+                onChangeText={(v) => update('hospital', v)} 
+                icon="local-hospital" 
+              />
+            </View>
+          </View>
         </View>
 
-        {/* Section Parents */}
+        {/* Section Filiation */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <MaterialIcons color={NaissanceTheme.green} name="family-restroom" size={20} />
-            <Text style={styles.sectionTitle}>FILIATION</Text>
+            <Text style={styles.sectionTitle}>FILIATION (PARENTS)</Text>
           </View>
 
-          <Field 
-            label="Nom de la mère" 
-            placeholder="Identité complète" 
-            value={form.motherName} 
-            onChangeText={(v) => update('motherName', v)} 
-            icon="person" 
-          />
-          <Field 
-            label="Nom du père" 
-            placeholder="Identité complète (optionnel)" 
-            value={form.fatherName} 
-            onChangeText={(v) => update('fatherName', v)} 
-            icon="person-outline" 
-          />
+          <Field label="Nom complet de la Mère" value={form.motherName} onChangeText={(v) => update('motherName', v)} icon="person" />
+          <View style={styles.parentDivider} />
+          <Field label="Nom complet du Père" value={form.fatherName} onChangeText={(v) => update('fatherName', v)} icon="person-outline" />
         </View>
 
         <Pressable onPress={continueToVerification} style={styles.continueButton}>
@@ -344,6 +346,21 @@ const styles = StyleSheet.create({
   sexTextActive: {
     color: NaissanceTheme.green,
     fontWeight: '700',
+  },
+  subSectionLabel: {
+    color: NaissanceTheme.muted,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginTop: 4,
+    opacity: 0.6,
+  },
+  parentDivider: {
+    backgroundColor: '#F2F4F7',
+    height: 1,
+    marginVertical: 16,
+    width: '100%',
   },
   continueButton: {
     alignItems: 'center',

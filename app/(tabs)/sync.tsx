@@ -5,7 +5,6 @@ import {
     StyleSheet, 
     Text, 
     View, 
-    Platform, 
     Modal, 
     ActivityIndicator, 
     Alert 
@@ -54,7 +53,14 @@ export default function SyncScreen() {
         </View>
 
         <Pressable
-          onPress={syncNow}
+          onPress={async () => {
+            await syncNow();
+            if (stats.pending === 0) {
+              Alert.alert('Synchronisation', 'Tous les dossiers ont été transmis avec succès !');
+            } else {
+              Alert.alert('Synchronisation', 'Certains dossiers n\'ont pas pu être transmis. Vérifiez votre connexion.');
+            }
+          }}
           disabled={isSyncing || stats.pending === 0}
           style={[styles.syncBtn, (isSyncing || stats.pending === 0) && { opacity: 0.5 }]}
         >
@@ -80,7 +86,7 @@ export default function SyncScreen() {
                 </View>
                 <View style={[styles.badge, record.status === 'synced' && styles.badgeSynced]}>
                     <Text style={[styles.badgeText, record.status === 'synced' && styles.badgeTextSynced]}>
-                        {record.status === 'synced' ? 'TRANSMI' : 'LOCAL'}
+                        {record.status === 'synced' ? 'TRANSMI' : 'EN ATTENTE'}
                     </Text>
                 </View>
             </Pressable>
@@ -93,7 +99,7 @@ export default function SyncScreen() {
               <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
                         <View style={styles.handle} />
-                        <Text style={styles.modalTitle}>Fiche d'Information</Text>
+                        <Text style={styles.modalTitle}>Fiche d&apos;Information</Text>
                     </View>
 
                     <ScrollView>

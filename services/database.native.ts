@@ -30,6 +30,23 @@ export async function initDatabase() {
       );
     `);
 
+    // Migration : Ajouter les colonnes manquantes si elles n'existent pas
+    const tableInfo = await db.getAllAsync<any>("PRAGMA table_info(records)");
+    const existingColumns = tableInfo.map(col => col.name);
+    
+    const missingColumns = [
+      'fatherAge', 'fatherBirthPlace', 'fatherProfession', 'fatherNationality',
+      'motherAge', 'motherBirthPlace', 'motherProfession', 'motherNationality',
+      'declarantName', 'declarantRelation', 'declarantTel', 'declarantIdPiece',
+      'witness1Name', 'witness1IdPiece', 'witness2Name', 'witness2IdPiece'
+    ];
+
+    for (const col of missingColumns) {
+      if (!existingColumns.includes(col)) {
+        await db.execAsync(`ALTER TABLE records ADD COLUMN ${col} TEXT;`);
+        console.log(`Column ${col} added to records table.`);
+      }
+    }
     // Table des paramètres
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS settings (
@@ -68,8 +85,15 @@ export async function setSetting(key: string, value: string) {
 export async function insertRecord(record: BirthRecord) {
   const database = await initDatabase();
   await database.runAsync(
-    `INSERT INTO records (id, childFirstName, childLastName, sex, birthDate, birthTime, birthPlace, fatherName, motherName, address, healthCenter, agentName, createdAt, syncedAt, status, proofHash) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO records (
+      id, childFirstName, childLastName, sex, birthDate, birthTime, birthPlace, 
+      fatherName, fatherAge, fatherBirthPlace, fatherProfession, fatherNationality,
+      motherName, motherAge, motherBirthPlace, motherProfession, motherNationality,
+      declarantName, declarantRelation, declarantTel, declarantIdPiece,
+      witness1Name, witness1IdPiece, witness2Name, witness2IdPiece,
+      address, healthCenter, agentName, createdAt, syncedAt, status, proofHash
+    ) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.id,
       record.childFirstName,
@@ -79,7 +103,23 @@ export async function insertRecord(record: BirthRecord) {
       record.birthTime,
       record.birthPlace,
       record.fatherName,
+      record.fatherAge || null,
+      record.fatherBirthPlace || null,
+      record.fatherProfession || null,
+      record.fatherNationality || null,
       record.motherName,
+      record.motherAge || null,
+      record.motherBirthPlace || null,
+      record.motherProfession || null,
+      record.motherNationality || null,
+      record.declarantName || null,
+      record.declarantRelation || null,
+      record.declarantTel || null,
+      record.declarantIdPiece || null,
+      record.witness1Name || null,
+      record.witness1IdPiece || null,
+      record.witness2Name || null,
+      record.witness2IdPiece || null,
       record.address,
       record.healthCenter,
       record.agentName,

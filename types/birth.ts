@@ -2,16 +2,20 @@ export type SyncStatus = 'pending' | 'synced' | 'failed';
 
 export type BirthRecord = {
   id: string;
+  childId: string; // NIU
   childFirstName: string;
   childLastName: string;
   sex: 'Masculin' | 'Féminin';
   birthDate: string;
   birthTime: string;
   birthPlace: string;
+  
   fatherName: string;
   motherName: string;
+  
   address: string;
   healthCenter: string;
+  hospital?: string;
   agentName: string;
   createdAt: string;
   syncedAt?: string;

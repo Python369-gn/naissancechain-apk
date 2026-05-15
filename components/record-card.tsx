@@ -22,9 +22,9 @@ export function RecordCard({ record }: { record: BirthRecord }) {
         </View>
       </View>
       <View style={styles.details}>
-        <Text style={styles.detail}>Naissance: {record.birthDate}</Text>
-        <Text style={styles.detail}>Lieu: {record.birthPlace}</Text>
-        <Text style={styles.detail}>Centre: {record.healthCenter}</Text>
+        <Text style={styles.detail}>Mère: {record.motherName}</Text>
+        <Text style={styles.detail}>Père: {record.fatherName || 'Inconnu'}</Text>
+        <Text style={styles.detail}>Naissance: {record.birthDate} ({record.birthPlace})</Text>
       </View>
     </View>
   );

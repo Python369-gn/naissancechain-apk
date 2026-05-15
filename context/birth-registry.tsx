@@ -32,7 +32,7 @@ export function BirthRegistryProvider({ children }: { children: ReactNode }) {
   const [agentPin, setAgentPin] = useState<string | null>(null);
   const [agentName, setAgentName] = useState('Agent de Terrain');
   const [isReady, setIsReady] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastCreated, setLastCreated] = useState<BirthRecord>();
 
